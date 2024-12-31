@@ -6,22 +6,22 @@ __pycache__/
 *.npy
 
 
-# initial submission
-README_init.md
-/topology_table
-/topology_model
-/tools
-/non_Hermitian_random_matrix
-/machine_learning
-/cases
-/cases_OBC
-/cases_table
+# for submission
+# /topology_table
+# /topology_model
+# /tools
+# /non_Hermitian_random_matrix
+# /machine_learning
+# /cases
+# /cases_OBC
+# /cases_table
+# *.svg
+# *.h5
+# *.pdf
 
 # C extensions
 *.so
-*.svg
-*.h5
-*.pdf
+
 
 # Distribution / packaging
 .Python
