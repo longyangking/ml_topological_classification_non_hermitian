@@ -1,5 +1,6 @@
 import numpy as np
 import numpy.linalg as LA
+import scipy.linalg as sLA
 from abc import ABC, abstractmethod
 
 Supported_Gap_Types = ['point', 'real line', 'imaginary line']
@@ -206,54 +207,42 @@ class NonHermitianTopologicalModel:
             if perturbation is not None:
                 hk = hk + hp
 
-            values, Rvectors = LA.eig(hk)
-            _, Lvectors = LA.eig(np.conjugate(np.transpose(hk)))
-
+            values, Lvectors, Rvectors = sLA.eig(hk, left=True, right=True)
             Rvectors = np.transpose(Rvectors)
             Lvectors = np.transpose(Lvectors)
 
-            indices = np.zeros(len(values), dtype=int)
-            for iv, rvector in enumerate(Rvectors):
-                _coeffs = np.zeros(len(values), dtype=complex)
-                for jv, lvector in enumerate(Lvectors):
-                    _coeffs[jv] = np.conjugate(lvector).dot(rvector)
-            
-                #print(iv)
-                #print(np.around(np.abs(_coeffs),decimals=3))
-                indices[iv] = int(np.argmax(np.abs(_coeffs)))
+            for i in range(len(values)):
+                _v = np.conjugate(Lvectors[i]).dot(Rvectors[i])
+                Lvectors[i] = np.conjugate(1/np.sqrt(_v))*Lvectors[i]
+                Rvectors[i] = 1/np.sqrt(_v)*Rvectors[i]
 
-            # TODO Check lvector
-            if len(np.unique(indices)) != len(values):
-                #print(indices)
-                raise Exception("Error in calculating the eigenvectors")
-            
-            # print("coeffs:", coeffs)
-            # # print(indices)
-            # _coeff = np.array([np.conjugate(Lvectors[indices[n]]).dot(Rvectors[n]) for n in range(len(values))])
-            # print(_coeff)
+            # values, Rvectors = LA.eig(hk)
+            # _, Lvectors = LA.eig(np.conjugate(np.transpose(hk)))
 
-            Lvectors = Lvectors[indices]
+            # Rvectors = np.transpose(Rvectors)
+            # Lvectors = np.transpose(Lvectors)
 
-            for iv, rvector in enumerate(Rvectors):
-                lvector = Lvectors[iv]
-                _v = np.conjugate(lvector).dot(rvector)
-                Rvectors[iv] = rvector
-                Lvectors[iv] = lvector/_v
+            # Mmat = np.zeros((len(values), len(values)),dtype=complex)
+            # for i in range(len(values)):
+            #     for j in range(len(values)):
+            #         Mmat[i,j] = np.conjugate(Lvectors[i]).dot(Rvectors[j])
+            # Lvectors = np.conjugate(np.transpose(LA.inv(Mmat))).dot(Lvectors)
 
-            # _coeff = np.array([np.abs(np.conjugate(Lvectors[n]).dot(Rvectors[n])) for n in range(len(values))])
-            # # print(_coeff)
-            # if not np.all(_coeff == 1.):
-            #     print("coeff:", _coeff)
-            #     raise Exception("Error in calculating the eigenvectors: not normalized")
+            # # normalize
+            # Umat = np.zeros((len(values), len(values)),dtype=complex)
+            # for i in range(len(values)):
+            #     for j in range(len(values)):
+            #         Umat[i,j] = np.conjugate(Lvectors[i]).dot(Rvectors[j])
+            # Lvectors = np.conjugate(np.transpose(LA.inv(Umat))).dot(Lvectors)
 
-            # n_hk = len(hk)
-            # coeff_list = np.zeros((n_hk, n_hk), dtype=complex)
-            # for iv, rvector in enumerate(Rvectors):
-            #     for jv, lvector in enumerate(Lvectors):
-            #         coeff_list[iv, jv] = np.conjugate(lvector).dot(rvector)
+            # check_biorthogonal = 0
+            # for i in range(len(values)):
+            #     check_biorthogonal += np.real(np.conjugate(Lvectors[i]).dot(Rvectors[i]))
 
-            # print(np.around(coeff_list,decimals=3))
-
+            # if np.round(check_biorthogonal) != len(values):
+            #     raise Exception("Error in calculating the eigenvectors, not full biorthogonal [{0}] at [k={1}]".format(
+            #         check_biorthogonal/len(values), k
+            #         ))
 
             return values, Rvectors, Lvectors
             

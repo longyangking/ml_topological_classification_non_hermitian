@@ -115,7 +115,7 @@ def topology_comparator(topological_model1, topological_model2, perturbation=Non
     return 1
 
 
-def topology_verifier(topological_model1, topological_model2, perturbations, epsilon=0.1, sfunc_smooth=None, n_guess=2, method='Nelder-Mead', iterations=1000, c_val=-10, verbose=False):
+def topology_verifier(topological_model1, topological_model2, perturbations, similarity_func=None, epsilon=0.1, sfunc_smooth=None, n_guess=2, method='Nelder-Mead', iterations=1000, c_val=-10, verbose=False):
     n_perturbation = len(perturbations)
     similarities = np.ones(n_perturbation)
     for n in range(n_perturbation):
@@ -131,8 +131,10 @@ def topology_verifier(topological_model1, topological_model2, perturbations, eps
         #     similarities[n] = topology_comparator(topological_model1, topological_model2, 
         #         perturbation=perturbations[n], epsilon=epsilon, sfunc_smooth=sfunc_smooth, c_val=c_val,
         #         n_guess=n_guess, method=method, iterations=iterations, vebose=verbose)
-            
-        similarities[n] = topology_comparator(topological_model1, topological_model2, 
+        if similarity_func is not None:
+            similarities[n] = similarity_func(topological_model1, topological_model2, perturbation=perturbations[n])
+        else:
+            similarities[n] = topology_comparator(topological_model1, topological_model2, 
                 perturbation=perturbations[n], epsilon=epsilon, sfunc_smooth=sfunc_smooth, c_val=c_val,
                 n_guess=n_guess, method=method, iterations=iterations, verbose=verbose)
 
@@ -142,14 +144,14 @@ def topology_verifier(topological_model1, topological_model2, perturbations, eps
     #return np.all(similarities)
     return np.any(similarities)
 
-def obtain_phase_center_and_number(center_indices, group_number, models, perturbations, epsilon=0.1, sfunc_smooth=None, n_guess=11, method='Nelder-Mead', iterations=1000, sc=0.5, c_val=-10, verbose=False):
+def obtain_phase_center_and_number(center_indices, group_number, models, perturbations, similarity_func=None, epsilon=0.1, sfunc_smooth=None, n_guess=11, method='Nelder-Mead', iterations=1000, sc=0.5, c_val=-10, verbose=False):
     center_models = [models[i] for i in center_indices]
     n_center = len(center_models)
 
     similarity_matrix = np.zeros((n_center, n_center))
     for i in range(n_center):
         for j in range(i, n_center):
-            similarity_matrix[i,j] = topology_verifier(center_models[i], center_models[j], perturbations, epsilon=epsilon, sfunc_smooth=sfunc_smooth, n_guess=n_guess, method=method, iterations=iterations, c_val=c_val, verbose=verbose)
+            similarity_matrix[i,j] = topology_verifier(center_models[i], center_models[j], perturbations, similarity_func=similarity_func, epsilon=epsilon, sfunc_smooth=sfunc_smooth, n_guess=n_guess, method=method, iterations=iterations, c_val=c_val, verbose=verbose)
             similarity_matrix[j,i] = similarity_matrix[i,j]
 
     if verbose:
